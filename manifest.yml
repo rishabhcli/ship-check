@@ -1,7 +1,164 @@
 modules:
+  # Human surface: a page inside every Jira project.
+  jira:projectPage:
+    - key: ship-check-page
+      title: Ship Check
+      render: native
+      resource: main
+      resolver:
+        function: resolver
+
+  # Agent surface 1: a Rovo agent that answers "can we ship?" from real data.
+  rovo:agent:
+    - key: ship-check-agent
+      name: Ship Check
+      description: Tells you whether a Jira release is ready to ship, what is in the way, and which context is missing.
+      prompt: |
+        You are Ship Check, a release readiness analyst for software teams working in Jira.
+
+        You never guess. Every verdict, count, issue key and document title you state must come from an action result. If an action returns an error or a degraded data source, say so plainly and do not fill the gap with assumptions.
+
+        Jobs you can do:
+        1. Release readiness. Call assess-release with the project key and the version name, then report the verdict (SHIP, AT RISK or HOLD), the score, and the failing or warning checks in order of severity. Quote issue keys exactly. End with the numbered "do next" list from the result.
+        2. Why is this stuck. Call explain-blockers with an issue key and show the unresolved dependency chain from the root blocker down to the issue, plus what the issue itself blocks.
+        3. Missing context. Call find-context-gaps to list high-priority issues that have no linked design, decision or runbook page, and to say whether release notes exist.
+        4. Which releases exist. Call list-releases when the user does not name a version.
+        5. Leave a note. Only when the user explicitly asks you to record the result in Jira, call post-readiness-note. State which issue will receive the comment before you call it.
+
+        If the user is looking at a Jira project or issue, use that project key and issue key unless they name another one. If you do not know the project key, ask once.
+
+        Format: lead with one line that has the verdict, then a short list of the checks that are not passing, each with its issue keys. Keep it under 200 words unless the user asks for detail.
+      conversationStarters:
+        - Can we ship the next release?
+        - Why is HCO-8 stuck?
+        - Which high-priority issues in 2.4.0 have no design or decision page?
+        - What changed in release readiness since the last check?
+      actions:
+        - list-releases
+        - assess-release
+        - explain-blockers
+        - find-context-gaps
+        - post-readiness-note
+
+  # Agent surface 2: the same actions as an MCP server for third-party agents (Claude Code, Cursor, ...).
+  rovo:mcp:
+    - key: ship-check-mcp
+      name: Ship Check
+      tools:
+        - list-releases
+        - assess-release
+        - explain-blockers
+        - find-context-gaps
+
+  # Reusable actions. Other Rovo agents can invoke these as tools too.
+  action:
+    - key: list-releases
+      name: List releases
+      function: listReleasesFn
+      actionVerb: GET
+      description: |
+        Lists the unreleased and released versions of a Jira project with their release dates. Use it when the user asks which releases exist or does not name a version.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example HCO.
+    - key: assess-release
+      name: Assess release readiness
+      function: assessReleaseFn
+      actionVerb: GET
+      description: |
+        Assesses whether a Jira release is ready to ship. Returns a verdict (SHIP, AT_RISK or HOLD), a score, evidence per check (blockers, owners, critical bugs, linked docs, release notes) and ordered next actions.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example HCO.
+        versionName:
+          title: Version name
+          type: string
+          required: false
+          description: The exact Jira version name, for example 2.4.0. When omitted the unreleased version with the earliest release date is used.
+    - key: explain-blockers
+      name: Explain what is blocking an issue
+      function: explainBlockersFn
+      actionVerb: GET
+      description: |
+        Explains why a Jira issue is stuck: the unresolved chain of blocking issues from the root blocker down to this issue, plus the issues it blocks.
+      inputs:
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: The Jira issue key, for example HCO-8.
+    - key: find-context-gaps
+      name: Find missing context
+      function: findContextGapsFn
+      actionVerb: GET
+      description: |
+        Finds high-priority issues in a release with no linked Confluence page (design, decision or runbook) using the Teamwork Graph, lists linked pages, and says whether release notes exist.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example HCO.
+        versionName:
+          title: Version name
+          type: string
+          required: false
+          description: The exact Jira version name. When omitted the next unreleased version is used.
+    - key: post-readiness-note
+      name: Post readiness note to Jira
+      function: postNoteFn
+      actionVerb: UPDATE
+      description: |
+        Adds the current readiness summary as a comment on a Jira issue. Only call this when the user explicitly asks to record the result in Jira.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example HCO.
+        versionName:
+          title: Version name
+          type: string
+          required: true
+          description: The exact Jira version name, for example 2.4.0.
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: The issue that will receive the comment, for example HCO-1.
+
   function:
-    - key: my-function
-      handler: index.run
+    - key: resolver
+      handler: index.handler
+    - key: listReleasesFn
+      handler: index.listReleasesAction
+    - key: assessReleaseFn
+      handler: index.assessReleaseAction
+    - key: explainBlockersFn
+      handler: index.explainBlockersAction
+    - key: findContextGapsFn
+      handler: index.findContextGapsAction
+    - key: postNoteFn
+      handler: index.postReadinessNoteAction
+
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+    - storage:app
+    - read:graph:issue:jira
+    - read:graph:page:confluence
+
 app:
   runtime:
     name: nodejs24.x
