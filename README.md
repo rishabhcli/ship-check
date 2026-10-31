@@ -68,9 +68,11 @@ test/                   node:test suite
 npm test
 ```
 
-The engine suite covers every check, blocker-chain tracing with cycles and external issues, the unknown handling for missing graph data, snapshot diffs and the plain-text rendering. These tests exercise the rules with fixtures, not a live site.
+23 tests: every rule, blocker-chain tracing with cycles and external issues, the unknown handling for missing graph data, snapshot diffs, and the assess, explain and post-note flows against a stubbed Jira and a stubbed graph. They do not call a live site.
 
 ## Honest limits
+
+- Verified live on a real Jira and Confluence site: the project page, Jira reads, blocker chains, Teamwork Graph reads and snapshots. The Rovo agent and the MCP tools are deployed but were not exercised live, because the developer site used for testing had no Rovo chat and did not list the app under Connected apps.
 
 - The Teamwork Graph only knows pages that the graph has indexed as linked to an issue. Indexing can lag after a page is created.
 - Persisted Cypher queries are owned by one app id and registered per app. A copy of this app under another id needs its own registration.
