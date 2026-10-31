@@ -1,10 +1,13 @@
 /**
  * Backend for the Jira project page (UI Kit). The UI calls these with `invoke(name, payload)`.
  */
-import Resolver from '@forge/resolver';
+import * as resolverModule from '@forge/resolver';
 import { assessProjectRelease, getReleases, postReadinessNote } from './service.js';
 import { deps } from './actions.js';
 
+// @forge/resolver is CommonJS with `exports.default`; depending on the bundler the class sits at
+// `.default` or `.default.default`, so resolve it defensively.
+const Resolver = resolverModule.default?.default || resolverModule.default;
 const resolver = new Resolver();
 
 const projectKeyOf = (context) => context?.extension?.project?.key;

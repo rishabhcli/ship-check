@@ -184,8 +184,10 @@ if (existing.issues?.length && !process.env.SEED_FORCE) {
   for (const [a, type, b] of LINKS) {
     await call('POST', '/rest/api/3/issueLink', {
       type: { name: type },
-      inwardIssue: { key: out.issues[b] },
-      outwardIssue: { key: out.issues[a] },
+      // Jira REST quirk: when creating a link, `inwardIssue` is the issue that gets the OUTWARD wording.
+      // So "a blocks b" is inwardIssue = a, outwardIssue = b.
+      inwardIssue: { key: out.issues[a] },
+      outwardIssue: { key: out.issues[b] },
     });
   }
   console.log('links created');

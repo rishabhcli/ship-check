@@ -5,12 +5,12 @@
  * fetch-style Response. In production the client wraps `api.asUser().requestJira`, so Jira's own
  * permission checks decide what the caller can see. Tests pass a stub, so nothing here needs a network.
  */
-import api, { assumeTrustedRoute } from '@forge/api';
+import { asUser, assumeTrustedRoute } from '@forge/api';
 import { categoryFromJira } from './engine/readiness.js';
 
 /** Production client: calls Jira as the user who invoked the app. */
 export function userJiraClient() {
-  const client = api.asUser();
+  const client = asUser();
   return {
     request: (path, init) => client.requestJira(assumeTrustedRoute(path), init),
   };

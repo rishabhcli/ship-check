@@ -9,7 +9,7 @@
  * The graph is the only place that knows about pages that mention or link an issue without the issue
  * carrying a remote link, which is why the Context trail and Release notes checks use it.
  */
-import api from '@forge/api';
+import { asUser } from '@forge/api';
 
 /** Persisted query keys. Override per environment with `forge variables set TWG_QUERY_*`. */
 export const QUERY_KEYS = {
@@ -44,7 +44,7 @@ query shipcheck_linkedDocs($queryKey: String!, $queryParams: CypherRequestParams
 
 /** Production client: runs graph queries as the invoking user, so results respect their permissions. */
 export function userTwgClient() {
-  const client = api.asUser();
+  const client = asUser();
   return {
     async query(query, variables, operationName) {
       const response = await client.requestTeamworkGraph(query, variables, operationName);

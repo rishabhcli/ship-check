@@ -65,7 +65,6 @@ const App = () => {
   return (
     <Stack space="space.200">
       <Inline space="space.200" alignBlock="center">
-        <Heading size="large">Ship Check</Heading>
         <Box>
           <Select
             appearance="default"
