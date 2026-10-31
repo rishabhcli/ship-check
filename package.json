@@ -1,0 +1,25 @@
+{
+  "name": "ship-check",
+  "version": "0.1.0",
+  "description": "Release readiness with receipts: a Forge app with a Rovo agent, a Rovo MCP server and Teamwork Graph context for Jira.",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "lint": "forge lint",
+    "deploy": "forge deploy -e development --non-interactive",
+    "seed": "node scripts/seed-demo-data.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@forge/api": "^8.4.0",
+    "@forge/bridge": "^7.2.1",
+    "@forge/kvs": "^2.1.1",
+    "@forge/react": "^12.4.0",
+    "@forge/resolver": "^2.0.2",
+    "react": "^18.3.1"
+  }
+}

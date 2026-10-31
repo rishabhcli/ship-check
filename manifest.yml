@@ -1,0 +1,10 @@
+modules:
+  function:
+    - key: my-function
+      handler: index.run
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/a93caeb3-a2e1-44d0-99dc-82fb67e345c3

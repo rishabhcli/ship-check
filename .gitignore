@@ -1,0 +1,5 @@
+node_modules/
+.idea/
+/.forge/
+scripts/.seed-output.json
+.env
